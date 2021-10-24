@@ -1,4 +1,3 @@
-const { response } = require('express')
 require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
@@ -14,15 +13,15 @@ app.use(express.json())
 morgan.token('content', function (req) { return JSON.stringify(req.body) })
 
 app.use(morgan(function (tokens, req, res) {
-    return [
-      tokens.method(req, res),
-      tokens.url(req, res),
-      tokens.status(req, res),
-      tokens.res(req, res, 'content-length'), '-',
-      tokens['response-time'](req, res), 'ms',
-      tokens.content(req)
-    ].join(' ')
-  }))
+  return [
+    tokens.method(req, res),
+    tokens.url(req, res),
+    tokens.status(req, res),
+    tokens.res(req, res, 'content-length'), '-',
+    tokens['response-time'](req, res), 'ms',
+    tokens.content(req)
+  ].join(' ')
+}))
 
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
@@ -36,7 +35,7 @@ const errorHandler = (error, request, response, next) => {
 }
 
 app.get('/', (request, response) => {
-    response.send('<h1>Hello World!</h1>')
+  response.send('<h1>Hello World!</h1>')
 })
 
 app.get('/api/persons', (request, response) => {
@@ -46,9 +45,9 @@ app.get('/api/persons', (request, response) => {
 })
 
 app.get('/info', (request, response) => {
-  Person.find({}).then(persons => {  
+  Person.find({}).then(persons => {
     response.send(
-          `<p>Phonebook has info for ${persons.length} people</p>
+      `<p>Phonebook has info for ${persons.length} people</p>
           <p>${new Date()}</p>`
     )})
 })
@@ -67,33 +66,26 @@ app.get('/api/persons/:id', (request, response, next) => {
 
 app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
-  .then(result => {
-    response.status(204).end()
-  })
-  .catch(error => next(error))
+    .then(result => {
+      console.log(result)
+      response.status(204).end()
+    })
+    .catch(error => next(error))
 })
 
-const generateId = () => {
-    /*const maxId = notes.length > 0
-      ? Math.max(...notes.map(n => n.id))
-      : 0*/
-    id=Math.floor(Math.random()*90000000)
-    return id
-  }
-  
 app.post('/api/persons', (request, response, next) => {
-    const body = request.body
+  const body = request.body
 
-    const person = new Person({
-        name: body.name,
-        number: body.number
+  const person = new Person({
+    name: body.name,
+    number: body.number
+  })
+
+  person.save()
+    .then(savedPerson => {
+      response.json(savedPerson)
     })
-
-    person.save()
-      .then(savedPerson => {
-        response.json(savedPerson)
-      })
-      .catch(error => next(error))
+    .catch(error => next(error))
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
@@ -115,5 +107,5 @@ app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
+  console.log(`Server running on port ${PORT}`)
 })
