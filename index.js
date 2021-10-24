@@ -32,34 +32,8 @@ const errorHandler = (error, request, response, next) => {
   } else if (error.name === 'ValidationError') {
     return response.status(400).json({ error: error.message })
   }
-
   next(error)
 }
-
-app.use(errorHandler)
-
-let persons = [
-    { 
-      "id": 1,
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": 2,
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": 3,
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": 4,
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
 
 app.get('/', (request, response) => {
     response.send('<h1>Hello World!</h1>')
@@ -107,20 +81,8 @@ const generateId = () => {
     return id
   }
   
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const body = request.body
-
-    if (!body.name || !body.number) {
-            return response.status(400).json({ 
-            error: 'Name or number is missing' 
-        })
-    }
-
-    if (persons.map(person=>person.name).includes(body.name)){
-        return response.status(400).json({
-            error: 'Name must be unique'
-        })
-    }
 
     const person = new Person({
         name: body.name,
@@ -132,8 +94,6 @@ app.post('/api/persons', (request, response) => {
         response.json(savedPerson)
       })
       .catch(error => next(error))
-
-    //response.json(person)
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
@@ -144,12 +104,14 @@ app.put('/api/persons/:id', (request, response, next) => {
     number: body.number,
   }
 
-  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+  Person.findByIdAndUpdate(request.params.id, person, { new: true, runValidators: true, context: 'query' })
     .then(updatedPerson => {
       response.json(updatedPerson)
     })
     .catch(error => next(error))
 })
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
